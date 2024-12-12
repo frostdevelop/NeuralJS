@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pacifiky's Magic Ball</title>
+  <style>
+	html {
+		color-scheme: dark;
+	}
+    body {
+      padding: 0 5vw;
+      color: #EEE;
+      font-size: 20px;
+      font-family: Tahoma, Arial, sans-serif;
+      color-scheme: dark;
+      text-shadow: 0 5px 20px rgba(0,0,0,0.8);
+      background: #222;
+    }
+	h1 {
+		text-align: center;
+		font-size: 80px;
+	}
+	h3 {
+		font-size: 40px;
+	}
+	h4 {
+		font-size: 30px;
+	}
+    /*Begin PacifikyNeoDark*/
+    :root {
+      --hover: #4f4f4f;
+      --border: 2px;
+      --radius: 45px;
+      --height: 6px;
+    }
+    input:focus,select:focus {outline:none;}
+    input:active,select:active,input[type="text"]:focus,.button:active {background: linear-gradient(to left top, #292929, #121212)};
+    .button,input,select {font-family: Tahoma, Arial, sans-serif;}
+    input:active,select:active,input[type="text"]:focus,.button:active {
+      box-shadow: 2px 2px var(--height) rgba(0,0,0,0.7) inset, -2px -2px var(--height) rgba(240,240,240,0.3) inset;
+      border-color: rgba(0,0,0,0);
+    }
+    details,input,select,.button,.fp-grad-stop-cont-cont {border: var(--border) #292929 solid;box-shadow: 2px 2px var(--height) rgba(0,0,0,0.7), -2px -2px var(--height) rgba(240,240,240,0.3);}
+    input,select {
+      transition: box-shadow 500ms ease, border 500ms ease;
+      background: linear-gradient(to left top, #121212, #292929);
+      color: currentcolor;
+      font-size: 30px;
+      padding: 20px;
+      margin: 10px;
+      border-radius: var(--radius);
+      min-width:0px;
+    }
+    select {background:#222}
+    input:hover,select:hover,.button:hover {border-color: var(--hover);}
+    .smallinput {width:10em}
+    .button {
+      display: inline-flex;
+      flex-direction: row;
+      justify-content: center;
+      align-content: center;
+      align-items: center;
+      cursor: pointer;
+      background: linear-gradient(to left top, #121212, #292929);
+      color: currentColor;
+      transition: box-shadow 500ms ease, border 500ms ease;
+      font-size: 30px;
+      padding: 20px;
+      margin: 10px;
+      border-radius: var(--radius);
+      min-width: 100px;
+    }
+    .iconbutton {
+      min-width: 0;
+      width: 45px;
+      height: 45px;
+      font-size: 30px;
+      border-radius: 50%;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+    .icon {
+      display: inline;
+      height: 25px;
+      width: 25px;
+    }
+    .smallbutton {min-width:5em;}
+    details {
+      border-radius: 20px;
+      padding: 10px;
+      margin: 10px;
+      /*background: linear-gradient(to left top, #121212, #292929);*/
+    }
+    details[open] > summary {
+      border-bottom: rgba(255,255,255,0.2) solid 2px;
+      margin-bottom: 10px;
+    }
+    .gbtn {
+      background: linear-gradient(135deg,#33ff33,#11c011);
+      box-shadow: 2px 2px var(--height) rgba(0,0,0,0.8),-2px -2px var(--height) #33ff33;
+      border-color:#11c011;
+    }
+    .gbtn:hover {border-color:#33ff33;}
+    .gbtn:active {background: linear-gradient(-45deg,#33ff33,#11c011);box-shadow: inset 2px 2px var(--height) rgba(0,0,0,0.8),inset -2px -2px var(--height) #33ff33;}
+    .rbtn {
+      background: linear-gradient(135deg,#f95353,#a51212);
+      box-shadow: 2px 2px var(--height) rgba(0,0,0,0.8),-2px -2px var(--height) #f95353;
+      border-color: #a51212;
+    }
+    .rbtn:hover {border-color: #f95353}
+    .rbtn:active {background: linear-gradient(-45deg,#f95353,#a51212);box-shadow: inset 2px 2px var(--height) rgba(0,0,0,0.8), inset -2px -2px var(--height) #f95353;}
+    /*End PacifikyNeoDark*/
+    .pabs {position:absolute;top:0;left:0;}
+    .inline {display:inline}
+    .hid {opacity:0;position:fixed;pointer-events:none;}
+    .insect {margin: 10px 0}
+    .flx-center {display:flex;flex-direction:column;align-content:center;justify-content:center;width:100%;justify-items:center;align-items:center;}
+    .pad-5 {padding:10px;}
+    hr {width:95%;border-color: #3d3d3d;margin:0 auto;}
+	#mg-question-input {width: 60vw;}
+	#mg-airesponse {
+		width: 80vw;
+		height: 40vh;
+		overflow: auto;
+		border: solid #a5a2a2 5px;
+		border-style: dotted;
+		border-radius: 20px;
+		padding: 0 40px;
+	}
+	.alignright {text-align:right;}
+  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+</head>
+
+<body lang="en">
+  <h1>Pacifiky's Magic Ball!</h1>
+  <hr/>
+  <div id="controls">
+  <div id="mg-airesponse">
+  <h3>
+	Hi! I'm Pacifiky's Magic Ball.
+	<br/>
+	Ask me anything and i'll tell you if it's true or false!
+  </h3>
+  <hr/>
+  </div>
+  <hr/>
+  <input type="text" id="mg-question-input" placeholder="Question (50 characters)"></input>
+  <button id="mg-askbtn" class="button">Ask</button>
+  <p id="mg-question-input-info">Length: 0</p>
+  <hr/>
+  <h4>Learning Rate:</h4>
+  <input type="number" id="mg-learn-input" step="0.01" min="0" value="0.2"></input>
+  <button id="mg-learn-set" class="button">Set</button>
+  <br/>
+  <button id="mg-trainbtn" class="button">Train 100 Epochs</button>
+  <hr/>
+  <h3>Training Stats:</h3>
+  <div id="mg-aiInfo">
+    <h3>
+      Current Epoch: Null
+	  <br/>
+	  Average Loss: Null
+    </h3>
+	<h3>
+		Learn Rate: 0.2
+	</h3>
+  </div>
+  <hr/>
+  <p>
+      AI STATS:
+	  <br/>
+	  Activation: Sigmoid
+	  <br/>
+	  OutputActivation: Sigmoid
+	  <br/>
+	  Optimizer: Stochastic Gradient Descent
+	  <br/>
+	  Loss function: Mean Squared Error
+	  <br/>
+	  Layers: 50:20:1
+	  <br/>
+  </p>
+  <p id="mg-dataset-stat">
+	DATASET STATS:<br/>
+	Loading...
+  </p>
+  </div>
+  <footer>Running NeuralJS v0.1.1<br/>Copyright 2024 Pacifiky. All rights reserved.</footer>
+  <script>
+    class NeuralJS {
+      static Loss = class Loss {
+        static mse(itsr,otsr){
+          if(itsr.length != otsr.length){throw RangeError("Input and Output lengths in MSE are unequal!")}
+          let err = 0;
+          for(let i=0;i<itsr.length;i++){
+            err += (itsr[i]-otsr[i])**2;
+          }
+          return err/itsr.length;
+        }
+      }
+      static Activation = class Activation {
+        static reLU(tensor){
+          for(let i=0;i<tensor.length;i++){
+            tensor[i] = Math.max(tensor[i],0);
+          }
+          return tensor;
+        }
+        static sigmoid(tensor){
+          for(let i=0;i<tensor.length;i++){
+            tensor[i] = 1/(1+Math.exp(-tensor[i])); // (Math.E**-tensor[i])
+          }
+          return tensor;
+        }
+        static lreLU(tensor,a){
+          for(let i=0;i<tensor.length;i++){
+            if(tensor[i] <= 0){
+              tensor[i] = a*tensor[i];
+            }
+          }
+          return tensor;
+        }
+        static tanh(tensor){
+          for(let i=0;i<tensor.length;i++){
+            tensor[i] = Math.tanh(tensor[i]);
+          }
+          return tensor;
+        }
+        static step(tensor,a){
+          for(let i=0;i<tensor.length;i++){
+            tensor[i] = tensor[i]>=a;
+          }
+          return tensor;
+        }
+      }
+      static Layer = class Layer {
+        constructor(wlen,blen){
+          this.weights = new Float32Array(wlen);
+          this.biases = new Float32Array(blen);
+        }
+        randVals(wran=1,bran=1){
+          //Randomize w/b
+          for(let i=0;i<this.weights.length;i++){
+            this.weights[i] = (Math.random()*(wran*2))-wran;
+          }
+          for(let i=0;i<this.biases.length;i++){
+            this.biases[i] = (Math.random()*(bran*2))-bran;
+          }
+        }
+        static Linear = class Linear extends Layer{
+          constructor(inum,onum){
+            super(inum*onum,onum);
+            this.incount = inum;
+            this.outcount = onum;
+          }
+          compute(tensor){
+            if(tensor.length != this.incount){throw RangeError("Layer input length is not equal to the input count of the Linear transformation!")};
+            let otensor = new Float32Array(this.outcount);
+            for(let j=0;j<this.outcount;j++){
+              for(let i=0;i<tensor.length;i++){
+                otensor[j] += tensor[i]*this.weights[(j*this.incount)+i];
+              }
+              otensor[j] += this.biases[j];
+            }
+            return otensor;
+          }
+        }
+      }
+      static Network = class Network {
+        constructor(shape,options){
+          //enum activation 0:Sigmoid 1:ReLU 2:LReLU 3:Tanh 4:Step 5:ELU
+          //enum loss 0:MSE 1:CROSSENTROPY
+          //enum opti 0:SGD 1: BGD 2: MBGD
+          //enum oactiv 0:Softmax 1:Linear 2:Sigmoid
+          this.learnRate = options.learnRate ?? 0.2;
+          this.activation = options.activation ?? 0;
+          switch(this.activation){
+            case 2:
+              if(!options.lreluA){console.warn("LeakyRELU activation network missing alpha option, setting default!")};
+              this.lreluA = options.lreluA ?? 0.2;
+              break;
+            case 4:
+              if(!options.stepA){console.warn("Step activation network missing alpha option, setting default!")};
+              this.stepA = options.stepA ?? 2;
+              break;
+          }
+          this.oActiv = options.oActiv ?? 0;
+          this.loss = options.loss ?? 0;
+          this.opti = options.opti ?? 0;
+          switch(this.opti){
+            case 2:
+              this.mbgdsize = options.mgbdsize ?? 1;
+              break;
+          }
+          this.shape = shape;
+        }
+        randAll(wran=1,bran=1){
+          for(let i=0;i<this.shape.length;i++){this.shape[i].randVals(wran,bran);}
+        }
+        forward(itensor,mode=0){
+          let otensor = itensor;
+          let totalneuron = 0;
+          let atable = new Array(this.shape.length);
+          let skpcnt = 0;
+          for(let i=0;i<this.shape.length;i++){
+            otensor = this.shape[i].compute(otensor);
+            if(i<this.shape.length-1){
+              switch(this.activation){
+                case 0:
+                  otensor = NeuralJS.Activation.sigmoid(otensor);
+                  break;
+                case 1:
+                  otensor = NeuralJS.Activation.reLU(otensor);
+                  break;
+                case 2:
+                  otensor = NeuralJS.Activation.lreLU(otensor,this.lreluA);
+                  break;
+                case 3:
+                  otensor = NeuralJS.Activation.tanh(otensor);
+                  break;
+                case 4:
+                  otensor = NeuralJS.Activation.step(otensor,this.stepA);
+                  break;
+              }
+            }else{
+              switch(this.oActiv){
+                case 0:
+                  break;
+                case 2:
+                  otensor = NeuralJS.Activation.sigmoid(otensor);
+                  break;
+              }
+            }
+            switch(mode){
+              case 1:
+                atable[i] = otensor.slice();
+            }
+          }
+          switch(mode){
+            case 1:
+              return [otensor,atable];
+            default:
+              return otensor;
+          }
+        }
+        train(ttensor){
+          switch(this.opti){
+            case 0:{
+              const [otensor,atable] = this.forward(ttensor[0],1);
+              const loss = this.loss ? 0 : NeuralJS.Loss.mse(otensor,ttensor[1]);
+              switch(this.loss){
+                case 0:
+                  let deltapa = new Float32Array(otensor.length); //Previous activation gradient
+                  const dmconst = 2/otensor.length; //The constant in the derivative thing;
+                  for(let i=0;i<otensor.length;i++){
+                    deltapa[i] = dmconst*(otensor[i]-ttensor[1][i]); //gradient
+                  };
+                  for(let i=this.shape.length-1;i>=0;i--){
+                    let deltaw = new Float32Array(this.shape[i].weights.length);
+                    let deltab = new Float32Array(this.shape[i].outcount);
+                    let deltaa = new Float32Array(this.shape[i].incount); //idk
+                    for(let j=0;j<deltapa.length;j++){
+                      if(i == this.shape.length-1){
+                        switch(this.oActiv){
+                          case 0:{
+                            break;
+                          }
+                          case 1:{
+                            deltab[j] = deltapa[j];
+                            const wrow = this.shape[i].incount*j; 
+                            const prevact = i==0 ? ttensor[0] : atable[i-1];
+                            for(let k=0;k<this.shape[i].incount;k++){
+                              deltaw[wrow+k] = deltapa[j]*prevact[k];
+                              deltaa[k] += deltapa[j]*this.shape[i].weights[wrow+k]; //Because all outputs are dependent on this activation, we calculate sum of the gradients for the derivative of the cost.
+                            }
+                            break;
+                          }
+                          case 2:{
+                            const deltasig = atable[i][j]*(1-atable[i][j]);
+                            deltab[j] = deltapa[j]*deltasig;
+                            const wrow = this.shape[i].incount*j; 
+                            const prevact = i==0 ? ttensor[0] : atable[i-1];
+                            for(let k=0;k<this.shape[i].incount;k++){
+                              deltaw[wrow+k] = deltapa[j]*deltasig*prevact[k];
+                              deltaa[k] += deltapa[j]*deltasig*this.shape[i].weights[wrow+k];
+                            }
+                            break;
+                          }
+                        }
+                      }else{
+                        switch(this.activation){
+                          case 0:{
+                            const deltasig = atable[i][j]*(1-atable[i][j]);
+                            deltab[j] = deltapa[j]*deltasig;
+                            const wrow = this.shape[i].incount*j;
+                            const prevact = i==0 ? ttensor[0] : atable[i-1];
+                            for(let k=0;k<this.shape[i].incount;k++){
+                              deltaw[wrow+k] = deltapa[j]*deltasig*prevact[k];
+                              deltaa[k] += deltapa[j]*deltasig*this.shape[i].weights[wrow+k];
+                            }
+                            break;
+                          }
+                          case 1:{
+                            if(atable[i][j] > 0){
+                              deltab[j] = deltapa[j];
+                              const wrow = this.shape[i].incount*j;
+                              const prevact = i==0 ? ttensor[0] : atable[i-1];
+                              for(let k=0;k<this.shape[i].incount;k++){
+                                deltaw[wrow+k] = deltapa[j]*prevact[k];
+                                deltaa[k] += deltapa[j]*this.shape[i].weights[wrow+k];
+                              }
+                            }
+                            break;
+                          }
+                          case 2:{
+                            const deltaact = atable[i][j] > 0 ? this.lreluA : 1;
+                            deltab[j] = deltapa[j]*deltaact;
+                            const wrow = this.shape[i].incount*j;
+                            const prevact = i==0 ? ttensor[0] : atable[i-1];
+                            for(let k=0;k<this.shape[i].incount;k++){
+                              deltaw[wrow+k] = deltapa[j]*deltaact*prevact[k];
+                              deltaa[k] += deltapa[j]*deltaact*this.shape[i].weights[wrow+k];
+                            }
+                            break;
+                          }
+                        }
+                      }
+                    }
+                    for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*deltaw[j]};
+                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].weights[j] -= this.learnRate*deltab[j]};
+                    deltapa = deltaa;
+                  }
+                  break;
+                case 1:
+                  break;
+              }
+              break;
+            }
+          };
+        };
+      }
+    }
+    
+	function inputStringTensor(s){
+		//let out = new Uint8Array(50);
+		let out = new Float32Array(50);
+		for(let i=0;i<Math.min(s.length,50);i++){
+			out[i] = Math.min(s.charCodeAt(i),255)/255;
+		};
+		return out;
+	}
+	function logBool(b){
+		return (Math.round(b) ? "True!" : "False...")
+	}
+	const aiInfo = document.getElementById("mg-aiInfo");
+	const trainBtn = document.getElementById("mg-trainbtn");
+	const askBtn = document.getElementById("mg-askbtn");
+	const qInput = document.getElementById("mg-question-input");
+	const aiResp = document.getElementById("mg-airesponse");
+	const qInputInfo = document.getElementById("mg-question-input-info");
+	const lRateInp = document.getElementById("mg-learn-input");
+	const lRateBtn = document.getElementById("mg-learn-set");
+	const dataStat = document.getElementById("mg-dataset-stat");
+    var magicb = new NeuralJS.Network([new NeuralJS.Layer.Linear(50,50),new NeuralJS.Layer.Linear(50,20),new NeuralJS.Layer.Linear(20,1)],{activation: 0,oActiv:2});
+    magicb.randAll(2,3);
+	magicb.ask = (s)=>{return logBool(magicb.forward(inputStringTensor(s))[0]);};
+	let epochnum = 0;
+	let ttests = ["9+10=21","1+1=2","Is water made of H2O?","Does the Sun rise in the east?","Is Mount Everest the tallest mountain?","Are bananas yellow when ripe?","Is the Pacific Ocean the largest ocean?","Is Earth the third planet from the Sun?","Does Brazil border Argentina?","Are there seven continents on Earth?","Is Antarctica covered in ice?","Does a year have 12 months?","One plus one equals two","Bananas are yellow","The moon orbits around Earth.","Cats always land on their feet.","Bears live in the Arctic.","Penguins live in the North Pole.","The Earth is round.","There are 365 days in a year.","Thomas Edison invented the light bulb.","Bees live in hives.","The Declaration of Independence was signed in","Cherries are red when they’re ripe.","The sun is a star.","The Statue of Liberty is located in New York City.","Australia is a continent.","Chocolate comes from cacao beans.","John F. Kennedy was assassinated in","The United Kingdom is located in Europe.","Niagara Falls is located in Canada.","There are 24 hours a day.","Strawberries are red when they’re ripe.","Abraham Lincoln was born in","The United States is located in North America.","Brazil is located in South America.","France is located in Europe.","Germany is located in Europe.","Lion cubs are born with spots.","Butterflies taste with their feet.","Insects have six legs.","The United States of America was founded in","Canada is located in North America.","Mexico is located in North America.","The Eiffel Tower is located in France.","The Panama Canal is located in Panama.","Christmas is celebrated on December 25th.","Halloween is celebrated on October 31st.","St. Patrick’s Day is celebrated on March 17th.","Valentine’s Day is celebrated on February 14th.","The heart is a muscle.","Benjamin Franklin invented the lightning rod.","Thomas Edison invented the light bulb.","The Wright brothers were the first to fly a plane.","Neil Armstrong was the first man on the moon.","Alexander Graham Bell invented the telephone.","The United States of America has 50 states.","Marge has blue hair.","Maggie is the youngest Simpson child.","Homer work at the nuclear power plant.","Ned Flanders is an evangelical Christian.","Mr. Burns is Springfield’s wealthiest citizen.","Smithers is in love with Mr. Burns.","Barney Gumble is an alcoholic.","Krusty the Clown is a clown.","Sideshow Bob is Krusty’s sidekick.","Lisa is a vegetarian.","Duff Beer is Homer’s favorite beer.","Lard Lad Donuts is Homer’s favorite donut shop.","Martin Prince is Lisa’s rival in school.","Todd Flanders is Ned Flanders’ son.","Rod Flanders is Ned Flanders’ son.","Lisa is eight years old.","Water boils at 100°C.","The Earth orbits the Sun.","Cats are mammals.","Humans have five senses.","The sky is blue.","2 + 2 equals 4.","Birds have feathers.","The sun is a star.","60 seconds make a minute.","The moon orbits the Earth.","The Amazon River is the second-longest river.","Honey never spoils, even after thousands of years.","Sharks existed before trees on Earth.","The Great Wall of China is not visible from space.","Bananas are berries, botanically speaking.","Octopuses have three hearts.","Antarctica is the driest continent on Earth.","The Eiffel Tower can grow in summer heat.","The human body has 206 bones.","A group of crows is called a murder.","Are cats mammals?","Is the Eiffel Tower in Paris?","Does water boil at 100°C?","The Earth orbits the Sun.","Water boils at 100°C at sea level.","Humans have 46 chromosomes in their cells.","The capital of France is Paris.","Mount Everest is the highest mountain on Earth.","The human body has 206 bones.","A year has 365 days (except leap years).","The Great Wall of China is visible from space.","The Amazon River is the longest river in South America.","Light travels faster than sound.","2+2=4","The square root of 16 is 4.","10/2=5","A triangle's angles sum to 180","The area of a circle is pi*r squared","5^2=25","0x100=0","−3+7=4.","A square has 4 equal sides.","The cube root of 27 is 3."];
+	let ftests = ["9+10=19","1+1=4","Bananas are blue","All dogs have tails.","Humans have four stomachs.","Ostriches can fly.","You can see the Great Wall of China from space.","Giraffes have no knees.","Worms have five hearts.","Lightning never strikes in the same place twice.","Goldfish have a three-second memory span.","Apples are a type of berry.","Grapes grow on bushes.","Koala bears are carnivores.","Diamonds are made of coal.","Peanuts are a type of nut.","Sharks are mammals.","Camels store water in their humps.","Worms have eyes.","Dolphins are fish.","Giraffes have two horns.","Cupid is the god of love in Greek mythology.","Lightning never strikes twice in the same place.","Lisa is taller than Bart.","Nelson Muntz is Bart’s best friend.","Tod Flanders is Ned Flanders’ son.","Is the Moon a star?","Is Africa smaller than Europe?","Does the Sun orbit Earth?","Are there 8 days in a week?","Is Mars closer to the Sun than Venus?","Is Russia the smallest country?","Do penguins live at the North Pole?","Is chocolate made from apples?","Are there 5 planets in the solar system?","Is Australia in the Northern Hemisphere?","The Earth is flat.","Fish can fly.","The sun is green.","Apples grow on vines.","Humans have three legs.","2 + 2 equals 5.","The ocean is made of milk.","Birds can swim like fish.","Grass is red.","The moon is made of cheese.","The sun is smaller than Earth.","Dolphins are fish, not mammals.","Mount Everest is located in North America.","Penguins can fly for short distances.","There are 8 planets in the Milky Way.","Water boils at 50°C at sea level.","Tomatoes are classified as grains.","Bees can live without a queen.","The Pacific Ocean is the smallest ocean.","Humans can survive without oxygen.","Is the Sun cold?","Do penguins live in the Sahara?","Can humans breathe underwater?","The moon is made of cheese.","Penguins can fly.","Elephants are the smallest animals.","The sun is blue.","Fish can walk on land.","Snow is hot","Birds don't have feathers.","Cars run on water.","Coffee is made from beans.","Humans have six legs.","Tomatoes are blue.","Cows give orange milk.","Dogs can talk.","Grass is always purple.","The sky is green.","Pizza is a fruit.","Trees grow upside down.","Cats bark.","Milk comes from trees.","Bats are blind.","Butterflies are nocturnal.","Sand is liquid.","Whales are reptiles.","Spiders have wings.","Frogs live in deserts.","Books are edible.","Computers grow on trees.","Ice doesn't melt.","Clocks run backward.","Pencils are digital.","Time moves backward.","The ocean is dry.","Clouds are solid.","Glass is a metal.","Shoes grow on plants.","Paintings are alive.","Watermelons are hollow.","Insects breathe fire.","Grass grows on the moon.","Dolphins live in forests.","Televisions are made of wood.","Candles are frozen.","Planes swim underwater.","Cameras are invisible.","Ice is hot.","Planets are flat.","Beavers live in caves.","Space is green.","Rocks float on water.","Cars fly.","The Moon is made of green cheese.","Elephants can fly.","The Eiffel Tower is located in London.","Penguins can live in the desert.","The Earth is flat.","People only use 10% of their brains.","Goldfish have a three-second memory span.","Venus is the closest planet to the Sun.","There are 24 hours in a day on Mars.","5+5=15.","9/3=1.","A hexagon has 5 sides.","7*0=7","2^3=6","3x4=13.","A circle has edges.","8−3=2.","1÷0=1.","25% of 100=50.","is grass yellow","george washington was the 1st president of france"];
+	dataStat.innerHTML = "DATASET STATS:<br/>True Sets: " + ttests.length.toString() + "<br/>False Sets: " +  ftests.length.toString();
+	for(let i=0;i<ttests.length;i++){
+		ttests[i] = inputStringTensor(ttests[i]);
+	}
+	for(let i=0;i<ftests.length;i++){
+		ftests[i] = inputStringTensor(ftests[i]);
+	}
+	
+	function userAsk(){
+		const uelm = document.createElement("h3");
+		///nelm.innerHTML = "Question: " + qInput.value + "<br/>Answer: "+magicb.ask(qInput.value);
+		uelm.innerHTML = qInput.value;
+		uelm.classList.add("alignright");
+		aiResp.appendChild(uelm);
+		aiResp.appendChild(document.createElement("hr"));
+		const belm = document.createElement("h3");
+		belm.innerHTML = "Magic Ball: " + magicb.ask(qInput.value);
+		aiResp.appendChild(belm);
+		aiResp.appendChild(document.createElement("hr"));
+		aiResp.scrollTop = aiResp.scrollHeight;
+	}
+	function setLearn(){magicb.learnRate = lRateInp.value = Math.max(parseFloat(lRateInp.value),0);aiInfo.children[1].innerText = "Learn Rate: "+lRateInp.value.toString();};
+	
+	askBtn.addEventListener("click",userAsk);
+	qInput.addEventListener("input",e=>{
+		if(qInput.value.length > 50){
+			qInputInfo.innerText = "Length of question over 50!";
+			qInput.value = qInput.value.substr(0,50);
+		}else{
+			qInputInfo.innerText = "Length: " + qInput.value.length.toString();
+		}
+	})
+	qInput.addEventListener("keydown",e=>{
+		if(e.key == "Enter"){
+			userAsk();
+		}
+	});
+	lRateBtn.addEventListener("click",setLearn);
+	lRateInp.addEventListener("change",setLearn);
+	trainBtn.addEventListener("click",e=>{
+		for(let epc=0;epc<100;epc++){
+			for(let i=0;i<ttests.length;i++){
+				magicb.train([ttests[i],[1]]);
+			}
+			for(let i=0;i<ftests.length;i++){
+				magicb.train([ftests[i],[0]]);
+			}
+			epochnum++;
+		}
+		let aloss = 0;
+		for(let i=0;i<ttests.length;i++){
+			aloss += NeuralJS.Loss.mse(magicb.forward(ttests[i]),[1])
+		}
+		for(let i=0;i<ftests.length;i++){
+			aloss += NeuralJS.Loss.mse(magicb.forward(ftests[i]),[0])
+		}
+		aiInfo.firstElementChild.innerHTML = "Current Epoch: " + epochnum.toString() + "<br/>Average Loss: " + (aloss/(ttests.length+ftests.length)).toString();
+	});
+  </script>
+</body>
+</html>
