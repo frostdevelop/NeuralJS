@@ -141,6 +141,7 @@
   <div class="canvascont">
   <canvas width="28" height="28" style="width:500px;height:500px;"></canvas>
   </div>
+  <!-- Storage inline as base64 (13mb + js), float64 (156250 floats), would be impractical so upload -->
   <div class="mnistoutbot">
     <h3>
       Current Epoch: Null 
@@ -630,38 +631,89 @@
         };
         this.type = this.data.getInt8(2);
         this.dimnum = this.data.getInt8(3);
+        this.dim = Int32Array(this.dimnum);
+        this.datalength = 1;
+        for(let i=0;i<this.dimnum;i++){
+          this.dim[i] = this.data.getUint32(4+(i*4));
+          this.datalength *= this.dim[i];
+        };
+        this.datastart = 4+(this.dimnum*4);
       }
       getTensor(){
+        let cursor = this.datastart;
+        let dataArr = null;
         switch(this.type){
           case 8:
-            this.data.getUint8();
+            dataArr = new Uint8Array(this.datalength);
+            for(let i=0;i<this.datalength;i++){
+              dataArr[i] = this.data.getUint8(cursor);
+              cursor++;
+            }
             break;
           case 9:
-            this.data.getInt8();
+            dataArr = new Int8Array(this.datalength);
+            for(let i=0;i<this.datalength;i++){
+              dataArr[i] = this.data.getInt8(cursor);
+              cursor++;
+            };
             break;
           case 11:
-            this.data.getInt16();
+            dataArr = new Int16Array(this.datalength);
+            for(let i=0;i<this.datalength;i++){
+              dataArr[i] = this.data.getInt16(cursor);
+              cursor+=2;
+            }
             break;
           case 12:
-            this.data.getInt32();
+            dataArr = new Int32Array(this.datalength);
+            for(let i=0;i<this.datalength;i++){
+              dataArr[i] = this.data.getInt32(cursor);
+              cursor+=4;
+            }
             break;
           case 13:
-            this.data.getFloat32();
+            dataArr = new Float32Array(this.datalength);
+            for(let i=0;i<this.datalength;i++){
+              dataArr[i] = this.data.getFloat32(cursor);
+              cursor+=4;
+            }
             break;
           case 14:
-            this.data.getFloat64();
+            dataArr = new Float64Array(this.datalength);
+            for(let i=0;i<this.datalength;i++){
+              dataArr[i] = this.data.getFloat64(cursor);
+              cursor+=8;
+            }
             break;
           default:
             alert("Invalid IDX data invalid type!")
             this.vdata = false;
             break;
+        };
+        //Reshape
+        return reshape(dataArr,this.dim.reverse());
+      }
+      reshape(a,dim){
+        let narr = a.slice();
+        for(let i=0;i<dim.length;i++){
+          let oarr = [];
+          const amt = narr.length/dim[i];
+          if(amt-Math.floor(amt) > 0){console.warn("Array is not directly divisible for the dim, flooring")};
+          for(let j=0;j<Math.floor(amt);j++){
+            oarr.push(narr.splice(0,dim[i]));
+          }
+          narr = oarr;
         }
+        return narr;
       }
       getDimArr(){
         return this.dim;
       }
       getType(){
         return this.type;
+      }
+      getDataLength(){
+        return this.datalength;
       }
     }
     
