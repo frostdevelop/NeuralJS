@@ -105,6 +105,7 @@
     .flx-center {display:flex;flex-direction:column;align-content:center;justify-content:center;width:100%;justify-items:center;align-items:center;}
     .pad-5 {padding:10px;}
     hr {width:95%;border-color: #3d3d3d;margin:0 auto;}
+    #tests {/*display:none*/}
   </style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
@@ -148,12 +149,14 @@
     </h3>
   </div>
   </div>
+  <div id="tests">
   <button id="testbtn">Start Test</button>
+  <button id="testIDX">Start IDX</button>
+  </div>
   <footer>Copyright 2024 Pacifiky. All rights reserved.</footer>
   <script>
     //Test Override:
-    //console.log = m=>{window.parent.document.getElementById("consolee").value += m + "\n"};
-    //console.log = window.parent.vcnslog;
+    console.log = window.parent.vcnslog;
     //class for draw
     class mfpaint {
       constructor(canv,inp2) {
@@ -631,7 +634,7 @@
         };
         this.type = this.data.getInt8(2);
         this.dimnum = this.data.getInt8(3);
-        this.dim = Int32Array(this.dimnum);
+        this.dim = new Int32Array(this.dimnum);
         this.datalength = 1;
         for(let i=0;i<this.dimnum;i++){
           this.dim[i] = this.data.getUint32(4+(i*4));
@@ -691,10 +694,10 @@
             break;
         };
         //Reshape
-        return reshape(dataArr,this.dim.reverse());
+        return this.reshape(dataArr,this.dim.reverse());
       }
       reshape(a,dim){
-        let narr = a.slice();
+        let narr = Array.from(a);
         for(let i=0;i<dim.length;i++){
           let oarr = [];
           const amt = narr.length/dim[i];
@@ -722,11 +725,51 @@
         
       }
     }
+    
+    function prettyArray(a){
+      if(a.length){
+        let s = "[";
+        for(let i=0;i<a.length;i++){
+          s += prettyArray(a[i]);
+          if(i!=a.length-1){s += ","};
+        };
+        s += "]";
+        return s;
+      }else{
+        return a.toString();
+      };
+    }
+    
     //try{
     let painter = new mfpaint(document.getElementById("controls").getElementsByClassName("canvascont")[0].children[0],document.getElementById("controls").getElementsByClassName("topConpaint")[0]);
     //}catch(e){alert(e)}
     
-	/*
+    //*
+    //Success label10k
+    //Success dimread
+    document.getElementById("testIDX").addEventListener("click",e=>{
+      const felm = document.createElement("input");
+      felm.type = "file";
+      felm.addEventListener("change",e=>{
+        //console.log("hi")
+        const fr = new FileReader();
+        fr.onload = ()=>{
+          //console.log("hi");
+          const ir = new IDXReader(fr.result);
+          try{
+            console.log(prettyArray(ir.getDimArr()));
+            //console.log(prettyArray(ir.getTensor()));
+            //Logs a encasing (maybe skip 1st elm of reshape dim);
+          }catch(e){console.log("Error: "+e.stack)};
+          felm.remove();
+        }
+        fr.readAsArrayBuffer(felm.files[0]);
+      });
+      felm.click();
+    });
+    //*/
+    
+    /*
     //Success
     try{
     var testnn = new NeuralJS.Network([new NeuralJS.Layer.Linear(3,5),new NeuralJS.Layer.Linear(5,7),new NeuralJS.Layer.Linear(7,10)],{activation: 0,oActiv:2});
@@ -773,23 +816,6 @@
 		//console.log(testnn);
 		epochnum++;
 	});
-    }catch(e){alert(e)}
-	*/
-    //console.log(NeuralJS.Activation.sigmoid([0,0,0]))
-	
-    /*
-    try{
-    let testlay = new NeuralJS.Layer.Linear(3,4);
-    testlay.randVals(2,2);
-    console.log(testlay.incount)
-    alert(testlay.weights)
-    }catch(e){alert(e)}
-    */
-    
-    /*
-    //Success
-    try{
-    alert(NeuralJS.Activation.reLU([2,3,1,0,-2,-3,-4]))
     }catch(e){alert(e)}
     */
   </script>
