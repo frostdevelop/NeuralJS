@@ -156,7 +156,7 @@
   <footer>Copyright 2024 Pacifiky. All rights reserved.</footer>
   <script>
     //Test Override:
-    console.log = window.parent.vcnslog;
+    //console.log = window.parent.vcnslog;
     //class for draw
     class mfpaint {
       constructor(canv,inp2) {
@@ -694,19 +694,90 @@
             break;
         };
         //Reshape
-        return this.reshape(dataArr,this.dim.reverse());
+        return this.reshape(dataArr,this.dim.reverse(),this.type);
       }
-      reshape(a,dim){
+      reshape(a,dim,type){
+        if(dim.length == 1){
+          if(dim[0] != a.length){
+            console.warn("Array is not directly divisible for the dim, flooring");amt = Math.floor(amt);
+            let narr = Array.from(a);
+            narr.length = dim[0];
+            switch(this.type){
+              case 8:
+                return Uint8Array.from(narr);
+                break;
+              case 9:
+                return Int8Array.from(narr);
+                break;
+              case 11:
+                return Int16Array.from(narr);
+                break;
+              case 12:
+                return Int32Array.from(narr);
+                break;
+              case 13:
+                return Float32Array.from(narr);
+                break;
+              case 14:
+                return Float64Array.from(narr);
+                break;
+              default:
+                alert("Invalid IDX data invalid type!")
+                break;
+            };
+          }else{
+            return a;
+          }
+        }
         let narr = Array.from(a);
-        for(let i=0;i<dim.length;i++){
-          let oarr = [];
-          const amt = narr.length/dim[i];
-          if(amt-Math.floor(amt) > 0){console.warn("Array is not directly divisible for the dim, flooring")};
-          for(let j=0;j<Math.floor(amt);j++){
-            oarr.push(narr.splice(0,dim[i]));
+        for(let i=0;i<dim.length-1;i++){
+          let amt = narr.length/dim[i];
+          if(amt-Math.floor(amt) > 0){console.warn("Array is not directly divisible for the dim, flooring");amt = Math.floor(amt);};
+          let oarr = new Array(amt);
+          if(i == 0){
+            switch(this.type){
+              case 8:
+                for(let j=0;j<amt;j++){
+                  oarr[j] = Uint8Array.from(narr.slice(j*dim[i],(j+1)*dim[i]));
+                }
+                break;
+              case 9:
+                for(let j=0;j<amt;j++){
+                  oarr[j] = Int8Array.from(narr.slice(j*dim[i],(j+1)*dim[i]));
+                }
+                break;
+              case 11:
+                for(let j=0;j<amt;j++){
+                  oarr[j] = Int16Array.from(narr.slice(j*dim[i],(j+1)*dim[i]));
+                }
+                break;
+              case 12:
+                for(let j=0;j<amt;j++){
+                  oarr[j] = Int32Array.from(narr.slice(j*dim[i],(j+1)*dim[i]));
+                }
+                break;
+              case 13:
+                for(let j=0;j<amt;j++){
+                  oarr[j] = Float32Array.from(narr.slice(j*dim[i],(j+1)*dim[i]));
+                }
+                break;
+              case 14:
+                for(let j=0;j<amt;j++){
+                  oarr[j] = Float64Array.from(narr.slice(j*dim[i],(j+1)*dim[i]));
+                }
+                break;
+              default:
+                alert("Invalid IDX data invalid type!")
+                break;
+            };
+          }else{
+            for(let j=0;j<amt;j++){
+              oarr[j] = narr.slice(j*dim[i],(j+1)*dim[i]);
+            }
           }
           narr = oarr;
         }
+        if(narr.length != dim[dim.length-1]){console.warn("Array is not the same length as dim!")}
         return narr;
       }
       getDimArr(){
@@ -748,6 +819,7 @@
     //Success label10k
     //Success dimread
     document.getElementById("testIDX").addEventListener("click",e=>{
+      //alert(console.log);
       const felm = document.createElement("input");
       felm.type = "file";
       felm.addEventListener("change",e=>{
@@ -758,7 +830,7 @@
           const ir = new IDXReader(fr.result);
           try{
             console.log(prettyArray(ir.getDimArr()));
-            //console.log(prettyArray(ir.getTensor()));
+            console.log(prettyArray(ir.getTensor()));
             //Logs a encasing (maybe skip 1st elm of reshape dim);
           }catch(e){console.log("Error: "+e.stack)};
           felm.remove();
