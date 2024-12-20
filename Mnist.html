@@ -156,7 +156,7 @@
   <footer>Copyright 2024 Pacifiky. All rights reserved.</footer>
   <script>
     //Test Override:
-    //console.log = window.parent.vcnslog;
+    console.log = window.parent.vcnslog;
     //class for draw
     class mfpaint {
       constructor(canv,inp2) {
@@ -430,11 +430,7 @@
           this.oActiv = options.oActiv ?? 0;
           this.loss = options.loss ?? 0;
           this.opti = options.opti ?? 0;
-          switch(this.opti){
-            case 2:
-              this.mbgdsize = options.mgbdsize ?? 1;
-              break;
-          }
+          //mgsize waz here
           this.shape = shape;
         }
         randAll(wran=1,bran=1){
@@ -499,6 +495,7 @@
           //Sigmoid derivative: s(x)(1-s(x))
           //ReLU/Lrelu derivative: x>0 ? 1 : 1*a || 0
           //MSE derivative: 2/n (y-yhat)
+          //Before optimizing the optimizer (lol) i'm making this rough draft.
           switch(this.opti){
             case 0:{
               //sgd ttensor = [itensor,ptensor]
@@ -601,20 +598,29 @@
                       }
                     }
                     for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*deltaw[j]};
-                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].weights[j] -= this.learnRate*deltab[j]};
+                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].biases[j] -= this.learnRate*deltab[j]}; //OH SHOOT I WAS CHANGING THE WEIGHTS NOT BIASES
                     deltapa = deltaa;
                   }
                   break;
                 case 1:
                   break;
               }
+              //Returning the negative gradient of input neurons could be interesting lol (literally stalbe diffusion)
               break;
             }
             case 1:{
-              
+              //Batch GD format: [[intensor...],[ptensor...]]
+              let sdeltaw = Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[i].weights.length)); //should have weight gradient (not neg) for each layer (each layer as f32array?) 
+              let sdeltab = Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[i].biases.length)); //bias same as ^^
+              for(let i=0;i<ttensor[0].length;i++){
+                const [otensor,atable] = this.forward(ttensor[0][i],1);
+                let deltaa = [];
+                
+              }
               break;
             }
             case 2:{
+              //MBGD format: [[itensor...],[ptensor...],size] REMOVE THE FLIPPING PROPERTY
               
               break;
             }
@@ -818,6 +824,7 @@
     //*
     //Success label10k
     //Success dimread
+    //Success data
     document.getElementById("testIDX").addEventListener("click",e=>{
       //alert(console.log);
       const felm = document.createElement("input");
@@ -828,11 +835,13 @@
         fr.onload = ()=>{
           //console.log("hi");
           const ir = new IDXReader(fr.result);
+          /*
           try{
             console.log(prettyArray(ir.getDimArr()));
             console.log(prettyArray(ir.getTensor()));
             //Logs a encasing (maybe skip 1st elm of reshape dim);
           }catch(e){console.log("Error: "+e.stack)};
+          */
           felm.remove();
         }
         fr.readAsArrayBuffer(felm.files[0]);
