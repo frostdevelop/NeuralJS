@@ -186,7 +186,7 @@
 	Loading...
   </p>
   </div>
-  <footer>Running NeuralJS v0.1.1<br/>Copyright 2024 Pacifiky. All rights reserved.</footer>
+  <footer>Running NeuralJS v0.1.2<br/>Copyright 2024 Pacifiky. All rights reserved.</footer>
   <script>
     class NeuralJS {
       static Loss = class Loss {
@@ -427,7 +427,7 @@
                       }
                     }
                     for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*deltaw[j]};
-                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].weights[j] -= this.learnRate*deltab[j]};
+                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].biases[j] -= this.learnRate*deltab[j]};
                     deltapa = deltaa;
                   }
                   break;
