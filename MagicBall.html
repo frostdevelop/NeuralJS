@@ -161,6 +161,10 @@
       Current Epoch: Null
 	  <br/>
 	  Average Loss: Null
+	  <br/>
+	  True Negative Gradient: Null
+	  <br/>
+	  False Negative Gradient: Null
     </h3>
 	<h3>
 		Learn Rate: 0.2
@@ -186,7 +190,7 @@
 	Loading...
   </p>
   </div>
-  <footer>Running NeuralJS v0.1.2<br/>Copyright 2024 Pacifiky. All rights reserved.</footer>
+  <footer>Running NeuralJS v0.1.1<br/>Copyright 2024 Pacifiky. All rights reserved.</footer>
   <script>
     class NeuralJS {
       static Loss = class Loss {
@@ -343,7 +347,7 @@
               return otensor;
           }
         }
-        train(ttensor){
+        train(ttensor,mode=0){
           switch(this.opti){
             case 0:{
               const [otensor,atable] = this.forward(ttensor[0],1);
@@ -427,9 +431,12 @@
                       }
                     }
                     for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*deltaw[j]};
-                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].biases[j] -= this.learnRate*deltab[j]};
+                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].weights[j] -= this.learnRate*deltab[j]};
                     deltapa = deltaa;
-                  }
+                  };
+                  if(mode == 1){
+                    return deltapa;
+                  };
                   break;
                 case 1:
                   break;
@@ -448,6 +455,21 @@
 			out[i] = Math.min(s.charCodeAt(i),255)/255;
 		};
 		return out;
+	}
+	function subar(a,b){
+	    let c = new Array(a.length);
+	    for(let i=0;i<a.length;i++){
+	        c[i] = a[i]-b[i];
+	    }
+	    return c;
+	}
+	function outputStringTensor(a){
+	    let out = new Array(a.length);
+	    for(let i=0;i<a.length;i++){
+	      out[i] = String.fromCharCode(Math.floor(Math.max(Math.min(a[i]*255,255),0)));
+	    }
+        out = out.join("");
+		return out
 	}
 	function logBool(b){
 		return (Math.round(b) ? "True!" : "False...")
@@ -507,12 +529,21 @@
 	lRateBtn.addEventListener("click",setLearn);
 	lRateInp.addEventListener("change",setLearn);
 	trainBtn.addEventListener("click",e=>{
+	    let tng = fng = ""
 		for(let epc=0;epc<100;epc++){
 			for(let i=0;i<ttests.length;i++){
-				magicb.train([ttests[i],[1]]);
+			    if(epc==99 && i==ttests.length-1){
+			      tng = outputStringTensor(subar(ttests[i],magicb.train([ttests[i],[1]],1)));
+			    }else{
+				  magicb.train([ttests[i],[1]]);
+				}
 			}
 			for(let i=0;i<ftests.length;i++){
-				magicb.train([ftests[i],[0]]);
+			    if(epc==99 && i==ftests.length-1){
+			      fng = outputStringTensor(subar(ftests[i],magicb.train([ftests[i],[0]],1)));
+			    }else{
+				  magicb.train([ftests[i],[0]]);
+				}
 			}
 			epochnum++;
 		}
@@ -523,7 +554,7 @@
 		for(let i=0;i<ftests.length;i++){
 			aloss += NeuralJS.Loss.mse(magicb.forward(ftests[i]),[0])
 		}
-		aiInfo.firstElementChild.innerHTML = "Current Epoch: " + epochnum.toString() + "<br/>Average Loss: " + (aloss/(ttests.length+ftests.length)).toString();
+		aiInfo.firstElementChild.innerHTML = "Current Epoch: " + epochnum.toString() + "<br/>Average Loss: " + (aloss/(ttests.length+ftests.length)).toString() + "<br/>True Negative Gradient: " + tng + "<br/>False Negative Gradient: " + fng;
 	});
   </script>
 </body>
