@@ -3,15 +3,26 @@
 <head>
   <title>Pacifiky's Mnist</title>
   <style>
+    html{color-scheme: dark;}
     body {
       padding: 0 5vw;
       color: #EEE;
       font-size: 20px;
       font-family: Tahoma, Arial, sans-serif;
-      color-scheme: dark;
       text-shadow: 0 5px 20px rgba(0,0,0,0.8);
       background: #222;
+      overflow-x: hidden;
     }
+    ::-webkit-scrollbar {width: 10px;}
+    ::-webkit-scrollbar-track {
+      background: #111;
+   }
+    ::-webkit-scrollbar-thumb {
+      background: #666;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {background:#777;}
+    ::-webkit-scrollbar-thumb:active {box-shadow: 0 0 10px white;}
     /*Begin PacifikyNeoDark*/
     :root {
       --hover: #4f4f4f;
@@ -127,7 +138,7 @@
       <br/>
       Optimization: Mini Batch Gradient Descent
       <br/>
-      OutActivation: Linear
+      OutActivation: Sigmoid
     </h3>
     <h3>(Output layer display)</h3>
     <h3 class="mniststatus">Loading train data, Calculating negative gradient, Randomizing weights/bias</h3>
@@ -151,7 +162,9 @@
   </div>
   <div id="tests">
   <button id="testbtn">Start Test</button>
+  <!--
   <button id="testIDX">Start IDX</button>
+  -->
   </div>
   <footer>Copyright 2024 Pacifiky. All rights reserved.</footer>
   <script>
@@ -376,6 +389,13 @@
           return tensor;
         }
       }
+      /*
+      static Opti = class Opti {
+        static backprop(){
+          //bckprop stuff here mar:todo
+        }
+      }
+      */
       static Layer = class Layer {
         constructor(wlen,blen){
           this.weights = new Float32Array(wlen);
@@ -397,6 +417,8 @@
             this.outcount = onum;
           }
           compute(tensor){
+            //console.log(tensor);
+            //console.log(tensor.length.toString() + " " + this.incount);
             if(tensor.length != this.incount){throw RangeError("Layer input length is not equal to the input count of the Linear transformation!")};
             let otensor = new Float32Array(this.outcount);
             for(let j=0;j<this.outcount;j++){
@@ -491,7 +513,109 @@
           }
           //return [otensor,atable]; //atale and ztable is equal to shape length. ++ ztable not req
         }
-        train(ttensor){
+        backprop(itensor,ptensor,sdeltaw=Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[ind].weights.length)),sdeltab=Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[ind].biases.length))){
+          const [otensor,atable] = this.forward(itensor,1);
+          let deltaa = [];
+          const loss = this.loss ? 0 : NeuralJS.Loss.mse(otensor,ptensor);
+          switch(this.loss){
+            case 0:
+              let deltapa = new Float32Array(otensor.length); //Previous activation gradient
+              const dmconst = 2/otensor.length; //The constant in the derivative thing;
+              for(let i=0;i<otensor.length;i++){
+                deltapa[i] = dmconst*(otensor[i]-ptensor[i]); //gradient
+              };
+              for(let i=this.shape.length-1;i>=0;i--){
+                //We should calculate learnrate and negative gradient at commit of deltatables.
+                let deltaa = new Float32Array(this.shape[i].incount); //idk
+                for(let j=0;j<deltapa.length;j++){
+                  if(i == this.shape.length-1){
+                    switch(this.oActiv){
+                      case 0:{
+                        break;
+                      }
+                      case 1:{
+                        //bias derivative is cost.
+                        sdeltab[i][j] += deltapa[j];
+                        const wrow = this.shape[i].incount*j; 
+                        const prevact = i==0 ? itensor : atable[i-1];
+                        for(let k=0;k<this.shape[i].incount;k++){
+                          sdeltaw[i][wrow+k] += deltapa[j]*prevact[k];
+                          deltaa[k] += deltapa[j]*this.shape[i].weights[wrow+k]; //Because all outputs are dependent on this activation, we calculate sum of the gradients for the derivative of the cost.
+                        }
+                        break;
+                      }
+                      case 2:{
+                        const deltasig = atable[i][j]*(1-atable[i][j]);
+                        sdeltab[i][j] += deltapa[j]*deltasig;
+                        const wrow = this.shape[i].incount*j; 
+                        const prevact = i==0 ? itensor : atable[i-1];
+                        for(let k=0;k<this.shape[i].incount;k++){
+                          sdeltaw[i][wrow+k] += deltapa[j]*deltasig*prevact[k];
+                          deltaa[k] += deltapa[j]*deltasig*this.shape[i].weights[wrow+k];
+                        }
+                        break;
+                      }
+                    }
+                  }else{
+                    switch(this.activation){
+                      case 0:{
+                        //same as outact 2
+                        const deltasig = atable[i][j]*(1-atable[i][j]);
+                        sdeltab[i][j] += deltapa[j]*deltasig;
+                        const wrow = this.shape[i].incount*j;
+                        const prevact = i==0 ? itensor : atable[i-1];
+                        for(let k=0;k<this.shape[i].incount;k++){
+                          sdeltaw[i][wrow+k] += deltapa[j]*deltasig*prevact[k];
+                          deltaa[k] += deltapa[j]*deltasig*this.shape[i].weights[wrow+k];
+                        }
+                        break;
+                      }
+                      case 1:{
+                        if(atable[i][j] > 0){ //erm dying relu 😨
+                          sdeltab[i][j] += deltapa[j];
+                          const wrow = this.shape[i].incount*j;
+                          const prevact = i==0 ? itensor : atable[i-1];
+                          for(let k=0;k<this.shape[i].incount;k++){
+                            sdeltaw[i][wrow+k] += deltapa[j]*prevact[k];
+                            deltaa[k] += deltapa[j]*this.shape[i].weights[wrow+k];
+                          }
+                        }
+                        break;
+                      }
+                      case 2:{
+                        const deltaact = atable[i][j] > 0 ? this.lreluA : 1; //yey no more dying
+                        sdeltab[i][j] += deltapa[j]*deltaact;
+                        const wrow = this.shape[i].incount*j;
+                        const prevact = i==0 ? itensor : atable[i-1];
+                        for(let k=0;k<this.shape[i].incount;k++){
+                          sdeltaw[i][wrow+k] += deltapa[j]*deltaact*prevact[k];
+                          deltaa[k] += deltapa[j]*deltaact*this.shape[i].weights[wrow+k];
+                        }
+                        break;
+                      }
+                      case 3:{
+                        //1/Math.cosh(x)**2 for tanh derivative
+                        break;
+                      }
+                      case 4:{
+                        //Could be approximated through 1/1+exp(-1000(x+n)) however, i'm lazy
+                        break;
+                      }
+                      case 5:{
+                        break;
+                      }
+                    }
+                  }
+                }
+                deltapa = deltaa;
+              }
+              break;
+            case 1:
+              break;
+          }
+          return [sdeltaw,sdeltab];
+        }
+        train(ttensor,mode=0){
           //Sigmoid derivative: s(x)(1-s(x))
           //ReLU/Lrelu derivative: x>0 ? 1 : 1*a || 0
           //MSE derivative: 2/n (y-yhat)
@@ -499,129 +623,48 @@
           switch(this.opti){
             case 0:{
               //sgd ttensor = [itensor,ptensor]
-              const [otensor,atable] = this.forward(ttensor[0],1);
-              const loss = this.loss ? 0 : NeuralJS.Loss.mse(otensor,ttensor[1]);
-              switch(this.loss){
-                case 0:
-                  let deltapa = new Float32Array(otensor.length); //Previous activation gradient
-                  const dmconst = 2/otensor.length; //The constant in the derivative thing;
-                  for(let i=0;i<otensor.length;i++){
-                    deltapa[i] = dmconst*(otensor[i]-ttensor[1][i]); //gradient
-                    //if(deltapa[i]>0){deltapa[i]=-deltapa[i]} (WHAT WAS I THINKING, i forgor that this controls the regular func)
-                  };
-                  for(let i=this.shape.length-1;i>=0;i--){
-                    //We should calculate learnrate and negative gradient at commit of deltatables.
-                    let deltaw = new Float32Array(this.shape[i].weights.length);
-                    let deltab = new Float32Array(this.shape[i].outcount);
-                    let deltaa = new Float32Array(this.shape[i].incount); //idk
-                    for(let j=0;j<deltapa.length;j++){
-                      if(i == this.shape.length-1){
-                        switch(this.oActiv){
-                          case 0:{
-                            //idk *哭哭* 我不知道！
-                            break;
-                          }
-                          case 1:{
-                            //bias derivative is cost.
-                            deltab[j] = deltapa[j];
-                            const wrow = this.shape[i].incount*j; 
-                            const prevact = i==0 ? ttensor[0] : atable[i-1];
-                            for(let k=0;k<this.shape[i].incount;k++){
-                              deltaw[wrow+k] = deltapa[j]*prevact[k];
-                              deltaa[k] += deltapa[j]*this.shape[i].weights[wrow+k]; //Because all outputs are dependent on this activation, we calculate sum of the gradients for the derivative of the cost.
-                            }
-                            //for(let i=0;i<deltab.length;i++){deltab[i] = }
-                            break;
-                          }
-                          case 2:{
-                            const deltasig = atable[i][j]*(1-atable[i][j]);
-                            deltab[j] = deltapa[j]*deltasig;
-                            const wrow = this.shape[i].incount*j; 
-                            const prevact = i==0 ? ttensor[0] : atable[i-1];
-                            for(let k=0;k<this.shape[i].incount;k++){
-                              deltaw[wrow+k] = deltapa[j]*deltasig*prevact[k];
-                              deltaa[k] += deltapa[j]*deltasig*this.shape[i].weights[wrow+k];
-                            }
-                            break;
-                          }
-                        }
-                      }else{
-                        switch(this.activation){
-                          case 0:{
-                            //same as outact 2
-                            const deltasig = atable[i][j]*(1-atable[i][j]);
-                            deltab[j] = deltapa[j]*deltasig;
-                            const wrow = this.shape[i].incount*j;
-                            const prevact = i==0 ? ttensor[0] : atable[i-1];
-                            for(let k=0;k<this.shape[i].incount;k++){
-                              deltaw[wrow+k] = deltapa[j]*deltasig*prevact[k];
-                              deltaa[k] += deltapa[j]*deltasig*this.shape[i].weights[wrow+k];
-                            }
-                            break;
-                          }
-                          case 1:{
-                            if(atable[i][j] > 0){ //erm dying relu 😨
-                              deltab[j] = deltapa[j];
-                              const wrow = this.shape[i].incount*j;
-                              const prevact = i==0 ? ttensor[0] : atable[i-1];
-                              for(let k=0;k<this.shape[i].incount;k++){
-                                deltaw[wrow+k] = deltapa[j]*prevact[k];
-                                deltaa[k] += deltapa[j]*this.shape[i].weights[wrow+k];
-                              }
-                            }
-                            break;
-                          }
-                          case 2:{
-                            const deltaact = atable[i][j] > 0 ? this.lreluA : 1; //yey no more dying
-                            deltab[j] = deltapa[j]*deltaact;
-                            const wrow = this.shape[i].incount*j;
-                            const prevact = i==0 ? ttensor[0] : atable[i-1];
-                            for(let k=0;k<this.shape[i].incount;k++){
-                              deltaw[wrow+k] = deltapa[j]*deltaact*prevact[k];
-                              deltaa[k] += deltapa[j]*deltaact*this.shape[i].weights[wrow+k];
-                            }
-                            break;
-                          }
-                          case 3:{
-                            //Math.sech(x)**2
-                            //1/Math.cosh(x)**2 for tanh derivative
-                            break;
-                          }
-                          case 4:{
-                            //Could be approximated through 1/1+exp(-1000(x+n)) however, i'm lazy
-                            break;
-                          }
-                          case 5:{
-                            break;
-                          }
-                        }
-                      }
-                    }
-                    for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*deltaw[j]};
-                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].biases[j] -= this.learnRate*deltab[j]}; //OH SHOOT I WAS CHANGING THE WEIGHTS NOT BIASES
-                    deltapa = deltaa;
-                  }
-                  break;
-                case 1:
-                  break;
-              }
-              //Returning the negative gradient of input neurons could be interesting lol (literally stalbe diffusion)
+              let [deltaw,deltab] = this.backprop(ttensor[0],ttensor[1]);
+              for(let i=0;i<this.shape.length;i++){
+                for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*deltaw[i][j];};
+                for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].biases[j] -= this.learnRate*deltab[i][j];};
+              };
               break;
             }
             case 1:{
               //Batch GD format: [[intensor...],[ptensor...]]
-              let sdeltaw = Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[i].weights.length)); //should have weight gradient (not neg) for each layer (each layer as f32array?) 
-              let sdeltab = Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[i].biases.length)); //bias same as ^^
-              for(let i=0;i<ttensor[0].length;i++){
-                const [otensor,atable] = this.forward(ttensor[0][i],1);
-                let deltaa = [];
-                
+              if(ttensor[0].length != ttensor[1].length){throw RangeError("input tensor and predicted tensor arrays have a length mismatch!")};
+              let sdeltaw = Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[ind].weights.length)); //should have weight gradient (not neg) for each layer (each layer as f32array?) 
+              let sdeltab = Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[ind].biases.length)); //bias same as ^^
+              for(let eind=0;eind<ttensor[0].length;eind++){
+                [sdeltaw,sdeltab] = this.backprop(ttensor[0][eind],ttensor[1][eind],sdeltaw,sdeltab);
+              }
+              for(let i=0;i<this.shape.length;i++){
+                for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*(sdeltaw[i][j]/ttensor[0].length)};
+                for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].biases[j] -= this.learnRate*(sdeltab[i][j]/ttensor[0].length)};
               }
               break;
             }
             case 2:{
               //MBGD format: [[itensor...],[ptensor...],size] REMOVE THE FLIPPING PROPERTY
-              
+              if(ttensor[0].length != ttensor[1].length){throw RangeError("input tensor and predicted tensor arrays have a length mismatch!")};
+              if(ttensor[0].length%ttensor[2] != 0){console.warn("Tensor length isn't divisible by batch size, last examples will automatically commit.");};
+              let sdeltaw = Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[ind].weights.length)); //should have weight gradient (not neg) for each layer (each layer as f32array?) 
+              let sdeltab = Array.from({length:this.shape.length},(_,ind)=>new Float32Array(this.shape[ind].biases.length)); //bias same as ^^
+              let iteminc = 1;
+              for(let eind=0;eind<ttensor[0].length;eind++){
+                [sdeltaw,sdeltab] = this.backprop(ttensor[0][eind],ttensor[1][eind],sdeltaw,sdeltab);
+                //eind%ttensor[2]
+                if(iteminc==ttensor[2] || eind==ttensor[0].length){
+                  console.log(eind);
+                  for(let i=0;i<this.shape.length;i++){
+                    for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*(sdeltaw[i][j]/iteminc);sdeltaw[i][j]=0;};
+                    for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].biases[j] -= this.learnRate*(sdeltab[i][j]/iteminc);sdeltab[i][j]=0;};
+                  };
+                  iteminc = 1;
+                }else{
+                  iteminc++;
+                };
+              }
               break;
             }
           };
@@ -797,9 +840,19 @@
       }
     }
     
-    class MnistFrontend {
-      constructor(top,bot,paint){
-        
+    //A front-back sys would be tedious and annoying lol
+    class Mnist {
+      constructor(meta,tr,paint){
+        this.engine = new NeuralJS.Network([new NeuralJS.Layer.Linear(784,64),new NeuralJS.Layer.Linear(64,32),new NeuralJS.Layer.Linear(32,10)],{activation:2,oActiv:2,opti:2});
+        this.train = new NeuralJS.Network([new NeuralJS.Layer.Linear(784,64),new NeuralJS.Layer.Linear(64,32),new NeuralJS.Layer.Linear(32,10)],{activation:2,oActiv:2,opti:2});
+        this.train.randAll(2,3);
+      }
+      updEngine(){
+        //deep copy dumb stuff
+        for(let i=0;i<this.train.shape.length;i++){
+          //for(let j=0;j<this.train.shape[i].weights;j++)
+          this.engine.shape[i].weights = th
+        }
       }
     }
     
@@ -817,9 +870,8 @@
       };
     }
     
-    //try{
     let painter = new mfpaint(document.getElementById("controls").getElementsByClassName("canvascont")[0].children[0],document.getElementById("controls").getElementsByClassName("topConpaint")[0]);
-    //}catch(e){alert(e)}
+    let sys = new MnistFrontend(1,1,painter);
     
     //*
     //Success label10k
@@ -850,55 +902,34 @@
     });
     //*/
     
-    /*
     //Success
+	//BGD success
+	//MBGD success
+	//Sigmoid, Relu, LReLU Success
     try{
-    var testnn = new NeuralJS.Network([new NeuralJS.Layer.Linear(3,5),new NeuralJS.Layer.Linear(5,7),new NeuralJS.Layer.Linear(7,10)],{activation: 0,oActiv:2});
+    //var testnn = new NeuralJS.Network([new NeuralJS.Layer.Linear(3,5),new NeuralJS.Layer.Linear(5,7),new NeuralJS.Layer.Linear(7,10)],{activation: 0,oActiv:2,opti:2});
+    var testnn = new NeuralJS.Network([new NeuralJS.Layer.Linear(3,5),new NeuralJS.Layer.Linear(5,7),new NeuralJS.Layer.Linear(7,10)],{activation: 2,oActiv:2,opti:2});
     testnn.randAll(2,3);
 	let epochnum = 0;
 	console.log("Epoch"+epochnum.toString());
 	console.log("123 loss:"+NeuralJS.Loss.mse(testnn.forward([1,2,3]),[0,0,1,0,0,0,0,0,0,0]).toString());
 	console.log("321 loss:"+NeuralJS.Loss.mse(testnn.forward([3,2,1]),[1,0,0,0,0,0,0,0,0,0]).toString());
 	document.getElementById("testbtn").addEventListener("click",e=>{
-		testnn.train([[1,2,3],[0,0,1,0,0,0,0,0,0,0]]);
-		testnn.train([[3,2,1],[1,0,0,0,0,0,0,0,0,0]]);
+	    try{
+		//testnn.train([[1,2,3],[0,0,1,0,0,0,0,0,0,0]]);
+		//testnn.train([[3,2,1],[1,0,0,0,0,0,0,0,0,0]]);
+		//testnn.train([[[3,2,1],[1,2,3]],[[1,0,0,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0]]]);
+		testnn.train([[[3,2,1],[1,2,3],[1,2,4],[4,2,1]],[[1,0,0,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0],[0,0,0,1,0,0,0,0,0,0],[1,0,0,0,0,0,0,0,0,0]],2]);
+		}catch(e){alert(e.stack)}
 		//console.log(testnn);
 		console.log("Epoch"+epochnum.toString());
 		console.log("123 loss:"+NeuralJS.Loss.mse(testnn.forward([1,2,3]),[0,0,1,0,0,0,0,0,0,0]).toString());
 		console.log("321 loss:"+NeuralJS.Loss.mse(testnn.forward([3,2,1]),[1,0,0,0,0,0,0,0,0,0]).toString());
-	});
-    }catch(e){alert(e)}
-	*/
-	
-	/*
-	try{
-	function inputStringTensor(s){
-		let out = new Float32Array(255);
-		for(let i=0;i<Math.min(s.length,255);i++){out[i] = s.charCodeAt(i)};
-		return out;
-	}
-	function outputStringTensor(a){
-		const abet = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"," ",""];
-		let out = "";
-		for(let i=0;i<Math.floor(a.length/28);i++){
-			let prob
-		}
-	}
-    var testnn = new NeuralJS.Network([new NeuralJS.Layer.Linear(255,1000),new NeuralJS.Layer.Linear(1000,500),new NeuralJS.Layer.Linear(500,448)],{activation: 0,oActiv:2});
-    testnn.randAll(2,3);
-	let epochnum = 0;
-	document.getElementById("testbtn").addEventListener("click",e=>{
-		console.log("Epoch"+epochnum.toString());
-		console.log("123 loss:"+NeuralJS.Loss.mse(testnn.forward([1,2,3]),[0,0,1,0,0,0,0,0,0,0]).toString());
-		console.log("321 loss:"+NeuralJS.Loss.mse(testnn.forward([3,2,1]),[1,0,0,0,0,0,0,0,0,0]).toString());
-		
-		testnn.train([[1,2,3],[0,0,1,0,0,0,0,0,0,0]]);
-		testnn.train([[3,2,1],[1,0,0,0,0,0,0,0,0,0]]);
-		//console.log(testnn);
+		console.log("124 loss:"+NeuralJS.Loss.mse(testnn.forward([1,2,4]),[0,0,0,1,0,0,0,0,0,0]).toString());
+		console.log("421 loss:"+NeuralJS.Loss.mse(testnn.forward([4,2,1]),[1,0,0,0,0,0,0,0,0,0]).toString());
 		epochnum++;
 	});
     }catch(e){alert(e)}
-    */
   </script>
 </body>
 </html>
