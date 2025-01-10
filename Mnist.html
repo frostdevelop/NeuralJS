@@ -124,8 +124,8 @@
 
 <body lang="en">
   <div id="controls">
-  <div class="mnistouttop">
-    <h3>
+  <div id="mnistouttop">
+    <h3 class="mnistinfo">
       Activation: Leaky ReLU
       <br/>
       Hidden layer depth: 2
@@ -154,10 +154,37 @@
   <canvas width="28" height="28" style="width:500px;height:500px;"></canvas>
   </div>
   <!-- Storage inline as base64 (13mb + js), float64 (156250 floats), would be impractical so upload -->
-  <div class="mnistoutbot">
-    <h3>
-      Current Epoch: Null 
-    </h3>
+  <div id="mnistoutbot">
+    <div class="training">
+      <h2>Training</h2>
+      <h3 class="info">
+        Current Epoch: Null 
+        <br/>
+        Loss: Null
+      </h3>
+      Interval (ms):
+      <input type="number" min="0" value="100" step='1' class='inttrainmnist'></input>
+      <br/>
+      <button class="button sttrainmnist">Start Training</button>
+      <button class="button sptrainmnist">Stop Training</button>
+      <hr/>
+      <button class="button filebtnmnist">Upload Files</button>
+      <br/>
+      <h3>Uploaded Files:</h3>
+      <p class="uploadedstat">× train-labels.idx1-ubyte<br/>× train-images.idx3-ubyte</p>
+    </div>
+    <div class="testing">
+      <h2>Testing</h2>
+      <h3 class="info">
+        Average Loss: Null
+      </h3>
+      <button class="button sttestmnist">Test</button>
+      <hr/>
+      <button class="button filebtnmnist">Upload Files</button>
+      <br/>
+      <h3>Uploaded Files:</h3>
+      <p class="uploadedstat">× t10k-labels.idx1-ubyte<br/>× t10k-images.idx3-ubyte</p>
+    </div>
   </div>
   </div>
   <div id="tests">
@@ -389,13 +416,6 @@
           return tensor;
         }
       }
-      /*
-      static Opti = class Opti {
-        static backprop(){
-          //bckprop stuff here mar:todo
-        }
-      }
-      */
       static Layer = class Layer {
         constructor(wlen,blen){
           this.weights = new Float32Array(wlen);
@@ -789,7 +809,7 @@
                 for(let j=0;j<amt;j++){
                   oarr[j] = Uint8Array.from(narr.slice(j*dim[i],(j+1)*dim[i]));
                 }
-                break;
+                  break;
               case 9:
                 for(let j=0;j<amt;j++){
                   oarr[j] = Int8Array.from(narr.slice(j*dim[i],(j+1)*dim[i]));
@@ -843,16 +863,172 @@
     //A front-back sys would be tedious and annoying lol
     class Mnist {
       constructor(meta,tr,paint){
-        this.engine = new NeuralJS.Network([new NeuralJS.Layer.Linear(784,64),new NeuralJS.Layer.Linear(64,32),new NeuralJS.Layer.Linear(32,10)],{activation:2,oActiv:2,opti:2});
-        this.train = new NeuralJS.Network([new NeuralJS.Layer.Linear(784,64),new NeuralJS.Layer.Linear(64,32),new NeuralJS.Layer.Linear(32,10)],{activation:2,oActiv:2,opti:2});
-        this.train.randAll(2,3);
+        this.engineMod = new NeuralJS.Network([new NeuralJS.Layer.Linear(784,64),new NeuralJS.Layer.Linear(64,32),new NeuralJS.Layer.Linear(32,10)],{activation:2,oActiv:2,opti:2});
+        this.trainMod = new NeuralJS.Network([new NeuralJS.Layer.Linear(784,64),new NeuralJS.Layer.Linear(64,32),new NeuralJS.Layer.Linear(32,10)],{activation:2,oActiv:2,opti:2});
+        this.trainMod.randAll(2,3);
+        //Train images use 28x28 arrays, deconstruct.
+        this.traindat = new Array(2);//(2tensors) [train-label,train-images]
+        this.testdat = new Array(2);//(2tensor) [t10-label,t10k-image]
+        this.trainsect = tr.getElementsByClassName("training")[0];
+        this.testsect = tr.getElementsByClassName("testing")[0];
+        this.upltrainbtn = this.trainsect.getElementsByClassName("filebtnmnist")[0];
+        this.upltestbtn = this.testsect.getElementsByClassName("filebtnmnist")[0];
+        this.trainstat = this.trainsect.getElementsByClassName("uploadedstat")[0];
+        this.teststat = this.testsect.getElementsByClassName("uploadedstat")[0];
+        this.trainupl = this.trainupl.bind(this);
+        this.testupl = this.testupl.bind(this);
+        //EVTINIT
+        this.upltrainbtn.addEventListener("click",this.trainupl);
+        this.upltestbtn.addEventListener("click",this.testupl);
+      }
+      trainupl(e){
+        this.uploadPrompt(input=>{
+          let uploaded = false;
+          for(let i=0;i<input.files.length;i++){
+            //alert(input.files[i].name);
+            switch(input.files[i].name){
+              case "train-labels.idx1-ubyte":{
+                //alert("labels found")
+                this.updFileStatus({trainls:"0%"});
+                const fr = new FileReader();
+                fr.onload = () => {
+                  this.updFileStatus({trainls:"10%"});
+                  const parser = new IDXReader(fr.result);
+                  //alert(parser.getDimArr());
+                  this.updFileStatus({trainls:"15%"});
+                  //try{
+                  this.traindat[0] = this.label2tensor(parser.getTensor());
+                  this.updFileStatus();
+                  //}catch(e){alert(e.stack)}
+                }
+                fr.readAsArrayBuffer(input.files[i]);
+                uploaded = true;
+                break;
+              }
+              case "train-images.idx3-ubyte":{
+                //alert("images found")
+                const fr = new FileReader();
+                this.updFileStatus({trainis:"0%"});
+                fr.onload = () => {
+                  this.updFileStatus({trainis:"10%"});
+                  const parser = new IDXReader(fr.result);
+                  this.updFileStatus({trainis:"15%"});
+                  //alert(parser.getDimArr());
+                  //try{
+                  this.traindat[1] = this.decon(parser.getTensor());
+                  this.updFileStatus();
+                  //}catch(e){alert(e.stack)}
+                }
+                fr.readAsArrayBuffer(input.files[i]);
+                uploaded = true;
+                break;
+              }
+            }
+          }
+          if(!uploaded){
+            alert("Missing files!\n(Could be format mismatch or no files uploaded)");
+          }
+        });
+      }
+      testupl(e){
+        this.uploadPrompt(input=>{
+          let uploaded = false;
+          for(let i=0;i<input.files.length;i++){
+            //alert(input.files[i].name);
+            switch(input.files[i].name){
+              case "t10k-labels.idx1-ubyte":{
+                const fr = new FileReader();
+                this.updFileStatus({testls:"0%"});
+                fr.onload = () => {
+                  this.updFileStatus({testls:"10%"});
+                  const parser = new IDXReader(fr.result);
+                  this.updFileStatus({testls:"15%"});
+                  this.testdat[0] = this.label2tensor(parser.getTensor());
+                  this.updFileStatus();
+                }
+                fr.readAsArrayBuffer(input.files[i]);
+                uploaded = true;
+                break;
+              }
+              case "t10k-images.idx3-ubyte":{
+                const fr = new FileReader();
+                this.updFileStatus({testis:"0%"});
+                fr.onload = () => {
+                  this.updFileStatus({testis:"10%"});
+                  const parser = new IDXReader(fr.result);
+                  this.updFileStatus({testis:"15%"});
+                  this.testdat[1] = this.decon(parser.getTensor());
+                  this.updFileStatus();
+                }
+                fr.readAsArrayBuffer(input.files[i]);
+                uploaded = true;
+                break;
+              }
+            }
+          }
+          if(!uploaded){
+            alert("Missing files!\n(Could be format mismatch or no files uploaded)");
+          }
+        });
+      }
+      //You can't make this async due to change uncertainty
+      uploadPrompt(callback){
+        let finput = document.createElement("input");
+        finput.type = "file";
+        finput.setAttribute("multiple",true);
+        finput.accept = ".idx1-ubyte,.idx3-ubyte";
+        finput.addEventListener("change",()=>{
+          callback(finput);
+          finput.remove();
+        });
+        finput.click();
+      }
+      updFileStatus(options={}){
+        //alert(this.traindat[1])
+        this.trainstat.innerText = (options.trainls ?? (this.traindat[0] ? "✓" : "×")) + " train-labels.idx1-ubyte\n" + (options.trainis ?? (this.traindat[1] ? "✓" : "×")) + " train-images.idx3-ubyte";
+        this.teststat.innerText = (options.testls ?? (this.testdat[0] ? "✓" : "×")) + " t10k-labels.idx1-ubyte\n" + (options.testis ?? (this.testdat[1] ? "✓" : "×")) + " t10k-images.idx3-ubyte";
+      }
+      decon(tensor){
+        //excecute onupload.
+        for(let i=0;i<tensor.length;i++){
+          const narr = new Float32Array(tensor[i].length * tensor[i][0].length);
+          for(let j=0;j<tensor[i].length;j++){
+            for(let k=0;k<tensor[i][j].length;k++){
+              narr[(j*tensor[i][0].length)+k] = tensor[i][j][k];
+            }
+          }
+          tensor[i] = narr;
+        }
+        //No return needed cuz it's a ref.
+        return tensor;
+      }
+      label2tensor(tensor){
+        //excecute onupload
+        for(let i=0;i<tensor.length;i++){
+          const ntensor = new Uint8Array(10);
+          ntensor[tensor[i]] = 1;
+          tensor[i] = ntensor;
+        }
+        return tensor;
       }
       updEngine(){
         //deep copy dumb stuff
         for(let i=0;i<this.train.shape.length;i++){
           //for(let j=0;j<this.train.shape[i].weights;j++)
-          this.engine.shape[i].weights = th
+          this.engineMod.shape[i].weights = this.trainMod.shape[i].weights.slice();
+          this.engineMod.shape[i].biases = this.trainMod.shape[i].biases.slice();
         }
+      }
+      train(){
+        this.trainMod.train([this.traindat[1],this.traindat[0],15]);
+        this.updEngine();
+      }
+      testEngine(){
+        let sumloss = 0;
+        for(let i=0;i<this.testdat[0].length;i++){
+          sumloss += NeuralJS.Loss.mse(this.engineMod.forward(this.testdat[1][i]),this.testdat[0][i]);
+        }
+        return sumloss/this.testdat[0].length;
       }
     }
     
@@ -871,7 +1047,7 @@
     }
     
     let painter = new mfpaint(document.getElementById("controls").getElementsByClassName("canvascont")[0].children[0],document.getElementById("controls").getElementsByClassName("topConpaint")[0]);
-    let sys = new MnistFrontend(1,1,painter);
+    let sys = new Mnist(document.getElementById("mnistouttop"),document.getElementById("mnistoutbot"),painter);
     
     //*
     //Success label10k
@@ -902,6 +1078,7 @@
     });
     //*/
     
+    /*
     //Success
 	//BGD success
 	//MBGD success
@@ -930,6 +1107,7 @@
 		epochnum++;
 	});
     }catch(e){alert(e)}
+    */
   </script>
 </body>
 </html>
