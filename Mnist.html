@@ -228,10 +228,7 @@
   -->
   </div>
   <footer>Copyright 2025 Frost. All rights reserved.</footer>
-</body><style>//enum activation 0:Sigmoid 1:ReLU 2:LReLU 3:Tanh 4:Step 5:ELU
-//enum loss 0:MSE 1:CROSSENTROPY
-//enum opti 0:SGD 1: BGD 2: MBGD
-//enum oactiv 0:Softmax 1:Linear 2:Sigmoid--</style><script>    //class for draw
+</body><script>    //class for draw
     //Setting direct commit don't need a layered system and also I need cool predictions
     class mfpaint {
       constructor(canv,inp2) {
@@ -718,7 +715,7 @@
                 [sdeltaw,sdeltab] = this.backprop(ttensor[0][eind],ttensor[1][eind],sdeltaw,sdeltab);
                 //eind%ttensor[2]
                 if(iteminc==ttensor[2] || eind==ttensor[0].length){
-                  console.log(eind);
+                  //console.log(eind);
                   for(let i=0;i<this.shape.length;i++){
                     for(let j=0;j<this.shape[i].weights.length;j++){this.shape[i].weights[j] -= this.learnRate*(sdeltaw[i][j]/iteminc);sdeltaw[i][j]=0;};
                     for(let j=0;j<this.shape[i].biases.length;j++){this.shape[i].biases[j] -= this.learnRate*(sdeltab[i][j]/iteminc);sdeltab[i][j]=0;};
@@ -918,7 +915,7 @@
         this.testupl = this.testupl.bind(this);
         this.statTest = this.statTest.bind(this);
         this.stopTrain = this.stopTrain.bind(this);
-        this.statTrain = this.stopTrain.bind(this);
+        this.statTrain = this.statTrain.bind(this);
         this.train = this.train.bind(this);
         this.updEngine = this.updEngine.bind(this);
         this.evalNum = this.evalNum.bind(this);
@@ -1122,6 +1119,7 @@
         this.trainMod.train([this.traindat[1],this.traindat[0],15]);
         this.updEngine();
         //}catch(e){alert(e.stack)}
+        this.traininfo.innerText = "Current Epoch: "+this.epoch.toString();
         this.status.innerText = "Idle, please upload files";
       }
       testEngine(){
@@ -1140,12 +1138,17 @@
         this.status.innerText = "Idle, please upload files";
       }
       statTrain(){
+        //try{
+        ///*
         if(this.process < 0){
+          //alert(this.trainint.value);
           this.process = setInterval(this.train,parseInt(this.trainint.value));
         }else{
           clearInterval(this.process);
           this.process = setInterval(this.train,parseInt(this.trainint.value));
         }
+        //*/
+        //}catch(e){alert(e.stack)}
       }
       stopTrain(){
         if(this.process >= 0){
