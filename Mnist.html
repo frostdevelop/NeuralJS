@@ -1448,6 +1448,7 @@
       importNN(){
         const felm = document.createElement("input");
         felm.type = "file";
+        felm.accept = ".nn";
         felm.addEventListener("change",e=>{
           if(felm.files.length == 0){
             alert("File Error: No files found!");
